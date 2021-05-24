@@ -16,6 +16,7 @@
 #include <pcl/visualization/point_cloud_handlers.h>
 #include <pcl/filters/voxel_grid.h>
 #include <vector>
+#include <pcl/filters/passthrough.h>
 
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloud;
 
@@ -44,6 +45,8 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_cluster (new pcl::PointCloud<pcl::P
 
 pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> clusterer;
 
+float test_input = 0;
+
 //Stores individual clusters as point clouds
 std::vector<pcl::PointCloud<pcl::PointXYZRGB>::Ptr> segments;
 
@@ -68,10 +71,17 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
 
     std::vector<int> indices;
     pcl::fromPCLPointCloud2(*cloud_filtered_ptr, *temp_cloud);
-    pcl::removeNaNFromPointCloud(*temp_cloud, *temp_cloud, indices);
+
+    pcl::PassThrough<pcl::PointXYZRGB> pass;
+    pass.setInputCloud(temp_cloud);
+    pass.setFilterFieldName("y");
+    pass.setFilterLimits(-test_input, FLT_MAX);
+    pass.filter(*filtered_cloud);
+
+    pcl::removeNaNFromPointCloud(*filtered_cloud, *filtered_cloud, indices);
 
     clusterer.setSearchMethod (tree);
-    clusterer.setInputCloud (temp_cloud);
+    clusterer.setInputCloud (filtered_cloud);
     clusterer.extract (cluster_indices);
 
 
@@ -80,7 +90,7 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr individual_cluster (new pcl::PointCloud<pcl::PointXYZRGB>);
 
         for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
-            individual_cluster->push_back((*temp_cloud)[*pit]);
+            individual_cluster->push_back((*filtered_cloud)[*pit]);
         individual_cluster->width = individual_cluster->size();
         individual_cluster->height = 1;
         individual_cluster->is_dense = true;
@@ -105,6 +115,8 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
 
 int main(int argc, char** argv) {
 
+    std::cout << "Enter max height: ";
+    std::cin >> test_input;
     viewer->setBackgroundColor(0,0,0);
     segments.reserve(10);
 
