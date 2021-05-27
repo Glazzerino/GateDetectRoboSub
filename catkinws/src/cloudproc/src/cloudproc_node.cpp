@@ -59,7 +59,7 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
 
     pcl_conversions::toPCL(*cloud_msg, *cloud);
 
-    clusterer.setClusterTolerance (0.2); // 20cm
+    clusterer.setClusterTolerance (0.2); // 2cm
     clusterer.setMinClusterSize (100);
     clusterer.setMaxClusterSize (25000);
 
@@ -93,19 +93,22 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
         individual_cluster->is_dense = true;
         segments.push_back(individual_cluster);
     }
+
     int counter = 0;
 
     pcl::PointXYZRGB min_p, max_p, mid_p, gate_mid_p;
 
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr gate;
+
     float max_diagonal = 0;
+
     for (pcl::PointCloud<pcl::PointXYZRGB>::Ptr seg : segments) {
         pcl::getMinMax3D(*seg, min_p, max_p);
+
         mid_p.x = (min_p.x + max_p.x) / 2;
-
         mid_p.y = (min_p.y + max_p.y) / 2;
-
         mid_p.z = (min_p.z + max_p.z) / 2;
+        
         float diagonal = std::sqrt(std::pow(max_p.x - min_p.x, 2) + std::pow(max_p.y - min_p.y, 2) + std::pow(max_p.z - min_p.z, 2));
         if (diagonal > max_diagonal) {
             max_diagonal = diagonal;
@@ -125,10 +128,8 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
         }
         ++counter;
     }
-    std::cout << gate << "\n";
-
+    
     if (gate != nullptr) {
-        std::cout << "gate found\n";
         viewer->addSphere(gate_mid_p, 0.05);
         // std::cout << "Min: " << min_p << "Max: " << max_p << "\n";
         pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZRGB> color_handler(
