@@ -16,6 +16,7 @@
 #include <pcl/visualization/point_cloud_color_handlers.h>
 #include <pcl/visualization/point_cloud_handlers.h>
 #include <pcl/filters/voxel_grid.h>
+// #include <pcl/surface/npi
 #include <vector>
 #include <pcl/filters/passthrough.h>
 
@@ -101,6 +102,7 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr gate;
 
     float max_diagonal = 0;
+    pcl::PointXYZRGB maxleft, maxright;
 
     for (pcl::PointCloud<pcl::PointXYZRGB>::Ptr seg : segments) {
         pcl::getMinMax3D(*seg, min_p, max_p);
@@ -108,12 +110,14 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
         mid_p.x = (min_p.x + max_p.x) / 2;
         mid_p.y = (min_p.y + max_p.y) / 2;
         mid_p.z = (min_p.z + max_p.z) / 2;
-        
+
         float diagonal = std::sqrt(std::pow(max_p.x - min_p.x, 2) + std::pow(max_p.y - min_p.y, 2) + std::pow(max_p.z - min_p.z, 2));
         if (diagonal > max_diagonal) {
             max_diagonal = diagonal;
             gate = seg;
             gate_mid_p = mid_p;
+            maxright = min_p;
+            maxleft = max_p;
         } else {
             pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZRGB> color_handler(
                 seg,
@@ -128,10 +132,25 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
         }
         ++counter;
     }
-    
+
     if (gate != nullptr) {
+        pcl::PointXYZRGB left, right, center;
+        // center.x = gate->dimensions
+        left = gate_mid_p;
+        right = gate_mid_p;
+        right.x = (gate_mid_p.x + maxright.x) / 2;
+        // right.y = (gate_mid_p.y + maxright.y) / 2;
+        // right.z = (gate_mid_p.z + maxright.z) / 2;
+
+        left.x = (gate_mid_p.x + maxleft.x) / 2;
+        // left.y = (gate_mid_p.y + maxleft.y) / 2;
+        // left.z = (gate_mid_p.z + maxleft.z) / 2;
         viewer->addSphere(gate_mid_p, 0.05);
-        // std::cout << "Min: " << min_p << "Max: " << max_p << "\n";
+        viewer->addSphere(right,0.05, "right");
+        viewer->addSphere(left,0.05, "left");
+
+        viewer->addSphere(maxright,0.05, "maxr");
+        viewer->addSphere(maxleft,0.05, "maxl");
         pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZRGB> color_handler(
             gate,
             0,
