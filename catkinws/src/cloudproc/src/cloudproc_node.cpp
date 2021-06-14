@@ -173,10 +173,12 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
         rightw.x = right.x;
         rightw.y = right.y;
         rightw.z = right.z;
+
         gate_left_waypoint.publish(leftw);
         gate_right_waypoint.publish(rightw);
-        gate_down_pub.publish(downcorner);
-        gate_upper_pub.publish(uppercorner);
+        // gate_down_pub.publish(downcorner);
+        // gate_upper_pub.publish(uppercorner);
+
         pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZRGB> color_handler(
             gate,
             0,
@@ -203,7 +205,7 @@ int main(int argc, char** argv) {
 
     gate_left_waypoint = handler.advertise<geometry_msgs::Point>
                     ("gate_left_waypoint", 10);
-    gate_upper_pub = handler.advertise<geometry_msgs::Point>
+    gate_right_waypoint = handler.advertise<geometry_msgs::Point>
                     ("gate_right_waypoint", 10);
 
     ros::Subscriber subscriber = handler.subscribe("frontr200/camera/depth_registered/points", 10, callback);
