@@ -55,7 +55,7 @@ ros::Publisher gate_down_pub,
     gate_upper_pub,
     gate_left_waypoint,
     gate_right_waypoint;
-    
+
 void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
 
     viewer->removeAllShapes();
@@ -189,12 +189,13 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
     }
     viewer->spinOnce(100);
 }
-ros::NodeHandle handler;
 
 int main(int argc, char** argv) {
 
     viewer->setBackgroundColor(0,0,0);
     segments.reserve(10);
+    ros::init(argc, argv, "point_cloud_processing");
+    ros::NodeHandle handler;
     gate_down_pub = handler.advertise<geometry_msgs::Point>
                     ("gate_inferior_corner", 10);
     gate_upper_pub = handler.advertise<geometry_msgs::Point>
@@ -205,7 +206,6 @@ int main(int argc, char** argv) {
     gate_upper_pub = handler.advertise<geometry_msgs::Point>
                     ("gate_right_waypoint", 10);
 
-    ros::init(argc, argv, "point_cloud_processing");
     ros::Subscriber subscriber = handler.subscribe("frontr200/camera/depth_registered/points", 10, callback);
 
     ros::spin();
