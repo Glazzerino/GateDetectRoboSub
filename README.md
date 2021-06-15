@@ -2,7 +2,7 @@
 
 ## How to run
 ___
-1. Download and compile [Point Cloud Library](https://pointclouds.org/) (this project used the compile-from-source method, but a prebuilt release should work).
+1. Download and install [Point Cloud Library](https://pointclouds.org/) (this project used the compile-from-source method, but a prebuilt release should work).
 2. Navigate to the workspace directory.
 3. Do:
 > catkin_make
