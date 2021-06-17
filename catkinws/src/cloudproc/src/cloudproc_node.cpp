@@ -56,9 +56,14 @@ ros::Publisher gate_down_pub,
     gate_left_waypoint,
     gate_right_waypoint;
 
+inline float get_euclidean_distance(pcl::PointXYZRGB a,pcl::PointXYZRGB b) {
+
+    return std::sqrt(std::pow(b.x - a.x, 2) + std::pow(b.y - a.y, 2) + std::pow(b.z - a.z, 2));
+}
+
 void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
 
-    viewer->removeAllShapes();
+    viewer->removeAllShapes(); 
     viewer->removeAllPointClouds();
     segments.clear();
     segments.reserve(10);
@@ -113,9 +118,20 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
     for (pcl::PointCloud<pcl::PointXYZRGB>::Ptr seg : segments) {
         pcl::getMinMax3D(*seg, min_p, max_p);
 
+        //Part of the gate detection routine
         mid_p.x = (min_p.x + max_p.x) / 2;
         mid_p.y = (min_p.y + max_p.y) / 2;
         mid_p.z = (min_p.z + max_p.z) / 2;
+
+        //Buoy detection
+        //Compare cloud width vs height, if height > width then it's (probably) a buoy
+        pcl::PointXYZRGB bot_right(max_p);
+        bot_right.y = min_p.y;
+        // viewer->addSphere(bot_right, 0.1);
+        if (get_euclidean_distance(bot_right, min_p) < get_euclidean_distance(bot_right, max_p)) {
+            std::cout << "Buy on sight\n";
+        }
+
 
         float diagonal = std::sqrt(std::pow(max_p.x - min_p.x, 2) + std::pow(max_p.y - min_p.y, 2) + std::pow(max_p.z - min_p.z, 2));
         if (diagonal > max_diagonal) {
@@ -176,8 +192,8 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
 
         gate_left_waypoint.publish(leftw);
         gate_right_waypoint.publish(rightw);
-        // gate_down_pub.publish(downcorner);
-        // gate_upper_pub.publish(uppercorner);
+        gate_down_pub.publish(downcorner);
+        gate_upper_pub.publish(uppercorner);
 
         pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZRGB> color_handler(
             gate,
@@ -204,9 +220,9 @@ int main(int argc, char** argv) {
                     ("gate_superior_corner", 10);
 
     gate_left_waypoint = handler.advertise<geometry_msgs::Point>
-                    ("gate_left_waypoint", 10);
+                        ("gate_left_waypoint", 10);
     gate_right_waypoint = handler.advertise<geometry_msgs::Point>
-                    ("gate_right_waypoint", 10);
+                        ("gate_right_waypoint", 10);
 
     ros::Subscriber subscriber = handler.subscribe("frontr200/camera/depth_registered/points", 10, callback);
 
