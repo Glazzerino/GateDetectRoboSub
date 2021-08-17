@@ -16,7 +16,6 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_ros
   # image_pipeline/depth_image_proc
 )
-find_package(OpenCV 4 REQUIRED) 
 find_package(PCL 1.2 REQUIRED)
 include_directories(${PCL_INCLUDE_DIRS})
 include_directories(${PCL_INCLUDE_DIRS})
@@ -112,10 +111,9 @@ add_definitions(${PCL_DEFINITIONS})
           ## CATKIN_DEPENDS: catkin_packages dependent projects also need
           ## DEPENDS: system dependencies of this project that dependent projects also need
           catkin_package(
-            INCLUDE_DIRS include
             LIBRARIES cloudproc
             CATKIN_DEPENDS  roscpp rospy sensor_msgs std_msgs
-            DEPENDS system_lib
+            DEPENDS 
             )
             
             ###########
@@ -159,7 +157,6 @@ add_executable(${PROJECT_NAME}_node src/cloudproc_node.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
-${OpenCV_LIBRARIES}
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
 )
